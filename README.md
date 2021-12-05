@@ -1,8 +1,20 @@
+# Dependence
+urllib3
+protobuf
+cryptography
+
+# Build
+To use or update this script, you should compile .proto module into .py
+
+run `protoc fuz.proto --python_out .` in shell
+
+or download `fuz_pb2.py` from [release](release)
+
 # Get Ids
 Get the manga/book/magazine id from url.
-* `https://comic-fuz.com/manga/1902`
-* `https://comic-fuz.com/book/25120`
-* `https://comic-fuz.com/magazine/25812`
+* `https://comic-fuz.com/manga/1902` -- `1902`
+* `https://comic-fuz.com/book/25120` -- `25120`
+* `https://comic-fuz.com/magazine/25812` -- `25812`
 
 # Ssage
 ```
@@ -32,7 +44,6 @@ optional arguments:
 ```
 
 # More
-
-[Official protobuf in js](https://comic-fuz.com/_next/static/chunks/pages/_app-b24da103ab4a3f25b6bc.js)
+`.proto` is rebuild with reading form [Official protobuf in js](https://comic-fuz.com/_next/static/chunks/pages/_app-b24da103ab4a3f25b6bc.js)
 
 [tampermonkey script by CircleLiu](https://github.com/CircleLiu/Comic-Fuz-Downloader)
