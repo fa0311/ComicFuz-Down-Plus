@@ -8,7 +8,7 @@ To use or update this script, you should compile .proto module into .py
 
 run `protoc fuz.proto --python_out .` in shell
 
-or download `fuz_pb2.py` from [release](release)
+or download `fuz_pb2.py` from [release](https://github.com/EnkanRec/ComicFuz-Down/releases)
 
 # Get Ids
 Get the manga/book/magazine id from url.
