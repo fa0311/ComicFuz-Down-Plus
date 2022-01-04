@@ -16,7 +16,7 @@ Get the manga/book/magazine id from url.
 * `https://comic-fuz.com/book/25120` -- `25120`
 * `https://comic-fuz.com/magazine/25812` -- `25812`
 
-# Ssage
+# Usage
 ```
 $ python fuz_down.py --help
 usage: fuz_down.py [-h] [-t <Token文件路径>] [-u <用户email>] [-p [<密码>]] [-o <输出路径>] [-j <并行线程数>]
