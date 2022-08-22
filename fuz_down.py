@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from array import array
 import os
 import re
 import fuz_pb2
@@ -135,7 +136,7 @@ def downloadThumb(save_dir: str, url: str, overwrite=False):
             f.write(r.read())
     # os.system(f"curl -s \"{IMG_HOST}{url}\" -o {name}")
 
-def download(save_dir: str, image: fuz_pb2.ViewerPage.Image, overwrite=False):
+def download(save_dir: str, file_format: str, image: fuz_pb2.ViewerPage.Image, overwrite=False):
     if not image.imageUrl:
         logging.debug("Not an image: %s", image)
         return
@@ -143,7 +144,7 @@ def download(save_dir: str, image: fuz_pb2.ViewerPage.Image, overwrite=False):
     if not name or not name.group(1):
         logging.debug("Can't gass filename: %s", image)
         return
-    name = f"{save_dir}{b64_to_10(name.group(1))}.{name.group(2)}"
+    name = f"{save_dir}{format(b64_to_10(name.group(1)), file_format)}.{name.group(2)}"
     if not overwrite and os.path.exists(name):
         logging.debug("Exists, continue: %s", name)
         return
@@ -160,6 +161,7 @@ def download(save_dir: str, image: fuz_pb2.ViewerPage.Image, overwrite=False):
 
 def down_pages(
     save_dir: str,
+    file_format: str,
     data, #: fuz_pb2.BookViewer2Response | fuz_pb2.MagazineViewer2Response | fuz_pb2.MangaViewerResponse,
     que: Queue
 ):
@@ -172,28 +174,31 @@ def down_pages(
         downloadThumb(save_dir, data.bookIssue.thumbnailUrl)
 
     for page in data.pages:
-        t = Thread(target=download, name=page.image.imageUrl, args=(save_dir, page.image))
+        t = Thread(target=download, name=page.image.imageUrl, args=(save_dir, file_format, page.image))
         t.start()
         # download(save_dir, page)
         que.put(t)
     que.join()
 
-def down_book(out_dir: str, book_id: int, token: str, que: Queue):
+def down_book(out_dir: str, file_format: str, book_id: int, token: str, que: Queue):
     book = get_book_index(book_id, token)
     bookIssueId = str(book.bookIssue.bookIssueId)
     logging.info("[%s]%s", bookIssueId, book.bookIssue.bookIssueName)
-    down_pages(f"{out_dir}/b{bookIssueId}/", book, que)
+    dir = out_dir.format(book_id=book_id,id=book_id,bookIssueId=bookIssueId,title=book.bookIssue.bookIssueName)
+    down_pages(dir, file_format, book, que)
 
-def down_magazine(out_dir: str, magazine_id: int, token: str, que: Queue):
+def down_magazine(out_dir: str, file_format: str, magazine_id: int, token: str, que: Queue):
     magazine = get_magazine_index(magazine_id, token)
     magazineIssueId = str(magazine.MagazineIssue.magazineIssueId)
     logging.info("[%s]%s", magazineIssueId, magazine.MagazineIssue.magazineIssueName)
-    down_pages(f"{out_dir}/z{magazineIssueId}/", magazine, que)
+    dir = out_dir.format(magazine_id=magazine_id,id=magazine_id,magazineIssueId=magazineIssueId,title=magazine.MagazineIssue.magazineIssueName)
+    down_pages(dir, file_format, magazine, que)
 
-def down_manga(out_dir: str, manga_id: int, token: str, que: Queue):
+def down_manga(out_dir: str, file_format: str, manga_id: int, token: str, que: Queue):
     manga = get_manga_index(manga_id, token)
     logging.info("[%d]%s", manga_id, manga.viewerTitle)
-    down_pages(f"{out_dir}/m{manga_id}/", manga, que)
+    dir = out_dir.format(manga_id=manga_id,id=manga_id,title=manga.viewerTitle)
+    down_pages(dir, file_format, manga, que)
 
 def getParser():
     parser = argparse.ArgumentParser()
@@ -217,8 +222,12 @@ def getParser():
         '-o',
         '--output-dir',
         metavar='<输出路径>',
-        default=".",
+        default="./{id}/",
         help="输出目录（默认当前目录）")
+    parser.add_argument(
+        '-f',
+        '--file-format',
+        default="02")
     parser.add_argument(
         '-j',
         '--n-jobs',
@@ -265,18 +274,17 @@ def main():
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(message)s")
     logging.info("= ComicFuz-Extractor made with ♡ by EnkanRec =")
-    os.makedirs(args.output_dir, exist_ok=True)
 
     token = get_session(args.token_file, args.user_email, args.password)
     que = Queue(args.n_jobs)
     Thread(target=worker, args=(que, ), daemon=True).start()
 
     if args.book:
-        down_book(args.output_dir, args.book, token, que)
+        down_book(args.output_dir, args.file_format, args.book, token, que)
     if args.magazine:
-        down_magazine(args.output_dir, args.magazine, token, que)
+        down_magazine(args.output_dir, args.file_format, args.magazine, token, que)
     if args.manga:
-        down_manga(args.output_dir, args.manga, token, que)
+        down_manga(args.output_dir, args.file_format, args.manga, token, que)
 
     logging.debug("Done.")
 
