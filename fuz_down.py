@@ -168,7 +168,8 @@ def down_pages(
         f.write(data.SerializeToString())
     with open(save_dir + "index.json", "w") as f:
         json.dump(json_format.MessageToDict(data), f, ensure_ascii=False, indent=4)
-    downloadThumb(save_dir, data.bookIssue.thumbnailUrl)
+    if getattr(data, "bookIssue", False):
+        downloadThumb(save_dir, data.bookIssue.thumbnailUrl)
 
     for page in data.pages:
         t = Thread(target=download, name=page.image.imageUrl, args=(save_dir, page.image))
