@@ -130,6 +130,24 @@ enum ScrollDirection {
     RIGHT = 1;
 }
 
+message Authorship {
+    Auther author = 1;
+    uint32 role = 2;
+}
+message Auther {
+    uint32 authorId = 1;
+    uint32 authorName = 2;
+    uint32 authorNameKana = 3;
+    uint32 imageUrl = 4;
+    bool isYellEnabled = 5;
+    bool isYellBonusOffered = 6;
+}
+
+message RecommendedMangas {
+    uint32 updateInfo = 1;
+    uint32 recommendedMangas = 2;
+}
+
 message BookViewer2Request {
     DeviceInfo deviceInfo = 1;
     uint32 bookIssueId = 2;
@@ -181,6 +199,31 @@ message MangaViewerRequest {
     bool useTicket = 3;
     UserPoint userPoint = 4;
     ViewerMode viewerMode = 5;
+}
+
+message ChapterLastPageResponse {
+    
+    DeviceInfo deviceInfo = 1;
+    UserPoint userPoint = 2;
+    bool isTicketAvailable = 3;
+    Authorship authorships = 4;
+    bool isCommentEnabled = 5;
+    uint32 numberOfComments = 6;
+    bool isFavorite = 7;
+    uint32 numberOfFavorites = 8;
+    bool isLiked = 9;
+    uint32 numberOfLike = 10;
+    uint32 mangaId = 11;
+    string rewardUrl = 12;
+    Chapter nextChapter = 13;
+    RecommendedMangas recommendedMangas = 14;
+
+
+
+
+
+
+
 }
 
 message MangaViewerResponse {

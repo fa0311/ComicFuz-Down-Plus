@@ -123,6 +123,17 @@ def get_manga_index(mangaId: int, token: str) -> fuz_pb2.MangaViewerResponse:
     index.ParseFromString(res)
     return index
 
+def get_next_page(bookId: int, token: str) -> fuz_pb2.MangaViewerResponse:
+    body = fuz_pb2.ChapterLastPageResponse()
+    body.deviceInfo.deviceType = fuz_pb2.DeviceInfo.DeviceType.BROWSER
+    body.mangaId = bookId
+    print(body.SerializeToString())
+
+    res = get_index("/v1/chapter_last_page", body.SerializeToString(), token)
+    index = fuz_pb2.BookViewer2Response()
+    index.ParseFromString(res)
+    return index
+
 def downloadThumb(save_dir: str, url: str, overwrite=False):
     name = re.match(r'.*/([0-9a-zA-Z_-]+)\.(\w+)\?.*', url)
     if not name or not name.group(1):
@@ -182,6 +193,18 @@ def down_pages(
 
 def down_book(out_dir: str, file_format: str, book_id: int, token: str, que: Queue):
     book = get_book_index(book_id, token)
+    
+    a = get_next_page(book_id, token)
+
+    with open("index.json", "w") as f:
+        json.dump(json_format.MessageToDict(a), f, ensure_ascii=False, indent=4)
+    
+    
+    
+    
+    
+    
+    
     bookIssueId = str(book.bookIssue.bookIssueId)
     logging.info("[%s]%s", bookIssueId, book.bookIssue.bookIssueName)
     dir = out_dir.format(book_id=book_id,id=book_id,bookIssueId=bookIssueId,title=book.bookIssue.bookIssueName)
@@ -258,6 +281,9 @@ def getParser():
         '--verbose',
         action="store_true",
         help="打印调试输出")
+    parser.add_argument(
+        '--download-more',
+        action="store_true")
     return parser
 
 def worker(que: Queue):
@@ -279,12 +305,15 @@ def main():
     que = Queue(args.n_jobs)
     Thread(target=worker, args=(que, ), daemon=True).start()
 
-    if args.book:
-        down_book(args.output_dir, args.file_format, args.book, token, que)
-    if args.magazine:
-        down_magazine(args.output_dir, args.file_format, args.magazine, token, que)
-    if args.manga:
-        down_manga(args.output_dir, args.file_format, args.manga, token, que)
+    count = 0
+    while count == 0 or args.download_more:
+        if args.book:
+            down_book(args.output_dir, args.file_format, args.book + count, token, que)
+        if args.magazine:
+            down_magazine(args.output_dir, args.file_format, args.magazine + count, token, que)
+        if args.manga:
+            down_manga(args.output_dir, args.file_format, args.manga + count, token, que)
+        count += 1
 
     logging.debug("Done.")
 
