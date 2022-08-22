@@ -1,2 +1,6 @@
 __pycache__
 fuz_pb2.py
+protoc.exe
+/*/*.jpeg
+/*/*.json
+/*/*.protobuf
